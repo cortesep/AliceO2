@@ -8,11 +8,6 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-#ifdef __CLING__
+#include "ZDCRaw/ZDCRecoParam.h"
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
-#pragma link C++ class o2::zdc::ZDCRecoParam + ;
-
-#endif
+O2ParamImpl(o2::zdc::ZDCRecoParam);

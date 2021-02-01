@@ -123,6 +123,19 @@ constexpr int IdZPC3 = 23;
 constexpr int IdZPC4 = 24;
 constexpr int IdZPCSum = 25;
 
+const int TDCSignal[NTDCChannels] = {
+  IdZNAC,   // TDCZNAC
+  IdZNASum, // TDCZNAS
+  IdZPAC,   // TDCZPAC
+  IdZPASum, // TDCZPAS
+  IdZEM1,   // TDCZEM1
+  IdZEM2,   // TDCZEM2
+  IdZNCC,   // TDCZNCC
+  IdZNCSum, // TDCZNCS
+  IdZPCC,   // TDCZPCC
+  IdZPCSum  // TDCZPCS
+};
+
 constexpr std::string_view ChannelNames[] = {
   "ZNAC",
   "ZNA1",

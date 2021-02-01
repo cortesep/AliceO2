@@ -39,6 +39,7 @@ struct RecEvent {
   math_utils::Point2D<float> centroidZNA;           /// centroid coordinates for ZNA
   math_utils::Point2D<float> centroidZNC;           /// centroid coordinates for ZNC
   std::array<TDCChannel, NTDCChannels> tdcChannels; /// At most MaxTDCValues Values in ns per TDC channel
+  Short_t fired[NTDCChannels][NTimeBinsPerBC] = {0}; //! Position at which the trigger algorithm is fired
 
   void print() const;
 

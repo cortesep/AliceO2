@@ -8,6 +8,8 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
+#include "CCDB/BasicCCDBManager.h"
+#include "CCDB/CCDBTimeStampUtils.h"
 #include "Framework/WorkflowSpec.h"
 #include "Framework/DataProcessorSpec.h"
 #include "Framework/DataSpecUtils.h"
@@ -18,7 +20,7 @@
 #include "Headers/DataHeader.h"
 #include "DataFormatsZDC/RawEventData.h"
 #include "ZDCSimulation/Digits2Raw.h"
-#include "ZDCRaw/DumpRaw.h"
+#include "ZDCRaw/RawReconstruction.h"
 #include <vector>
 #include <sstream>
 
@@ -38,15 +40,30 @@ WorkflowSpec defineDataProcessing(ConfigContext const& config)
 {
   WorkflowSpec workflow;
   workflow.emplace_back(DataProcessorSpec{
-    "zdc-raw-parser",
+    "zdc-raw-reco",
     select(config.options().get<std::string>("input-spec").c_str()),
     Outputs{},
     AlgorithmSpec{[](InitContext& setup) {
         auto loglevel = setup.options().get<int>("log-level");
-        return adaptStateless([loglevel](InputRecord& inputs, DataAllocator& outputs) {
-          o2::zdc::DumpRaw zdc_dr;
-          zdc_dr.init();
-          zdc_dr.setVerbosity(loglevel);
+	std::string ccdb_url = setup.options().get<std::string>("ccdb-url");
+        return adaptStateless([loglevel,ccdb_url](InputRecord& inputs, DataAllocator& outputs) {
+          long timeStamp = 0;
+	  auto& mgr = o2::ccdb::BasicCCDBManager::instance();
+	  mgr.setURL(ccdb_url);
+	  if (timeStamp == mgr.getTimestamp()) {
+	    LOG(FATAL) << "Cannot get imestamp";
+	  }
+	  mgr.setTimestamp(timeStamp);
+	  auto moduleConfig = mgr.get<o2::zdc::ModuleConfig>(o2::zdc::CCDBPathConfigModule);
+	  if (!moduleConfig) {
+	    LOG(FATAL) << "Cannot module configuratio for timestamp " << timeStamp;
+	    return;
+	  }
+	  LOG(INFO) << "Loaded module configuration for timestamp " << timeStamp;
+	  o2::zdc::RawReconstruction zdc_rr;
+	  zdc_rr.setModuleConfig(moduleConfig);
+          zdc_rr.init();
+          zdc_rr.setVerbosity(loglevel);
           DPLRawParser parser(inputs);
           o2::header::DataHeader const* lastDataHeader = nullptr;
           std::stringstream rdhprintout;
@@ -85,8 +102,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& config)
               }
               if (payload != nullptr) {
                 for (Int_t ip = 0; ip < payloadSize; ip += 16) {
-                  //o2::zdc::Digits2Raw::print_gbt_word((const UInt_t*)&payload[ip]);
-                  zdc_dr.processWord((const UInt_t*)&payload[ip]);
+                  zdc_rr.processWord((const UInt_t*)&payload[ip]);
                 }
               }
             }
@@ -95,9 +111,10 @@ WorkflowSpec defineDataProcessing(ConfigContext const& config)
           if (loglevel > 0) {
             LOG(INFO) << rdhprintout.str();
           }
-          zdc_dr.write();
+          zdc_rr.write();
         }); }},
     Options{
-      {"log-level", VariantType::Int, 1, {"Logging level [0-2]"}}}});
+      {"log-level", VariantType::Int, 1, {"Logging level [0-2]"}},
+      {"ccdb-url", VariantType::String, "http://ccdb-test.cern.ch:8080", {"Path to CCDB"}}}});
   return workflow;
 }

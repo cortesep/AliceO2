@@ -88,6 +88,7 @@ union EventChData {
 
 struct EventData {
   EventChData data[NModules][NChPerModule] = {0};
+  Short_t s[NModules][NChPerModule][NTimeBinsPerBC] = {0};
   void print() const;
   void reset();
   ClassDefNV(EventData, 1);
