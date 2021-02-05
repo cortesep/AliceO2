@@ -257,8 +257,9 @@ bool Digitizer::triggerBC(int ibc)
         int id = trigCh.id;
         if (id >= 0 && id < NChannels) {
           auto ipos = NChPerModule * md.id + ic;
+          int last1 = trigCh.last + 2;
           bool okPrev = false;
-          int last1 = trigCh.last + 2; // To be modified. The new requirement is 3 consecutive samples
+#ifdef ZDC_DOUBLE_TRIGGER_CONDITION
           // look for 2 consecutive bins (the 1st one spanning trigCh.first : trigCh.last range) so that
           // signal[bin]-signal[bin+trigCh.shift] > trigCh.threshold
           for (int ib = trigCh.first; ib < last1; ib++) { // ib may be negative, so we shift by offs and look in the ADC cache
@@ -275,6 +276,26 @@ bool Digitizer::triggerBC(int ibc)
             }
             okPrev = ok;
           }
+#else
+          bool okPPrev = false;
+          // look for 3 consecutive bins (the 1st one spanning trigCh.first : trigCh.last range) so that
+          // signal[bin]-signal[bin+trigCh.shift] > trigCh.threshold
+          for (int ib = trigCh.first-1; ib < last1; ib++) { // ib may be negative, so we shift by offs and look in the ADC cache
+            int binF, bcFidx = ibc + binHelper(ib, binF);
+            int binL, bcLidx = ibc + binHelper(ib + trigCh.shift, binL);
+            const auto& bcF = (bcFidx < 0 || !mFastCache[bcFidx]) ? mDummyBC : *mFastCache[bcFidx];
+            const auto& bcL = (bcLidx < 0 || !mFastCache[bcLidx]) ? mDummyBC : *mFastCache[bcLidx];
+            bool ok = bcF.digi[ipos][binF] - bcL.digi[ipos][binL] > trigCh.threshold;
+            if (ok && okPrev && okPPrev) {                              // trigger ok!
+              bcCached.trigChanMask |= 0x1 << (NChPerModule * md.id + ic); // register trigger mask
+              LOG(DEBUG) << bcF.digi[ipos][binF] << " - " << bcL.digi[ipos][binL] << " = " << bcF.digi[ipos][binF] - bcL.digi[ipos][binL] << " > " << trigCh.threshold;
+              LOG(DEBUG) << " hit [" << md.id << "," << ic << "] " << int(id) << "(" << ChannelNames[id] << ") => " << bcCached.trigChanMask;
+              break;
+            }
+	    okPPrev = okPrev;
+            okPrev = ok;
+          }
+#endif
         }
       }
     }
