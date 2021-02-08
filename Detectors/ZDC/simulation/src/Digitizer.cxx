@@ -65,8 +65,9 @@ void Digitizer::process(const std::vector<o2::zdc::Hit>& hits,
     int detID = hit.GetDetectorID();
     int secID = hit.getSector();
     float nPhotons;
-    if (detID == ZEM) { // TODO: ZEMCh1 and Common are both 0, could skip the check for detID
-      nPhotons = (secID == ZEMCh1) ? hit.getPMCLightYield() : hit.getPMQLightYield();
+    if (detID == ZEM) {
+      // ZEM calorimeters have only common PM
+      nPhotons = hit.getPMCLightYield();
     } else {
       nPhotons = (secID == Common) ? hit.getPMCLightYield() : hit.getPMQLightYield();
     }
