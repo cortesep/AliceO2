@@ -13,8 +13,6 @@
 
 using namespace o2::zdc;
 
-O2ParamImpl(ZDCTDCParam);
-
 void ZDCTDCParam::setShift(uint32_t ich, float val)
 {
   if (ich >= 0 && ich < NTDCChannels) {

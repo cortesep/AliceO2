@@ -11,10 +11,9 @@
 #ifndef O2_ZDC_TDCPARAM_H_
 #define O2_ZDC_TDCPARAM_H_
 
-#include <array>
-#include "CommonUtils/ConfigurableParam.h"
-#include "CommonUtils/ConfigurableParamHelper.h"
 #include "ZDCBase/Constants.h"
+#include <Rtypes.h>
+#include <array>
 
 /// \file ZDCTDCParam.h
 /// \brief Parameters to correct TDCs
@@ -26,13 +25,13 @@ namespace zdc
 {
 // parameters of ZDC reconstruction
 
-struct ZDCTDCParam : public o2::conf::ConfigurableParamHelper<ZDCTDCParam> {
+struct ZDCTDCParam {
   float tdc_shift[NTDCChannels] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // Correction of TDC position (ns)
  public:
   void setShift(uint32_t ich, float val);
   void print();
 
-  O2ParamDef(ZDCTDCParam, "ZDCTDCParam");
+  ClassDefNV(ZDCTDCParam, 1);
 };
 } // namespace zdc
 } // namespace o2

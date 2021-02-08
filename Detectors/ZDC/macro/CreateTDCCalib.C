@@ -24,24 +24,24 @@ using namespace o2::zdc;
 using namespace std;
 
 void CreateTDCCalib(long tmin = 0, long tmax = -1,
-                        std::string ccdbHost = "http://ccdb-test.cern.ch:8080")
+                    std::string ccdbHost = "http://ccdb-test.cern.ch:8080")
 {
 
-  o2::zdc::ZDCTDCParam& conf = const_cast<o2::zdc::ZDCTDCParam&>(ZDCTDCParam::Instance());
+  ZDCTDCParam conf;
 
   int modID;
 
   // Recentering of TDCs
-  conf.setShift(TDCZNAC,14);
-  conf.setShift(TDCZNAS,14);
-  conf.setShift(TDCZPAC,14);
-  conf.setShift(TDCZPAS,14);
-  conf.setShift(TDCZEM1,14);
-  conf.setShift(TDCZEM2,14); // Not in coincidence
-  conf.setShift(TDCZNCC,14);
-  conf.setShift(TDCZNCS,14);
-  conf.setShift(TDCZPCC,14);
-  conf.setShift(TDCZPCS,14);
+  conf.setShift(TDCZNAC, 14);
+  conf.setShift(TDCZNAS, 14);
+  conf.setShift(TDCZPAC, 14);
+  conf.setShift(TDCZPAS, 14);
+  conf.setShift(TDCZEM1, 14);
+  conf.setShift(TDCZEM2, 14);
+  conf.setShift(TDCZNCC, 14);
+  conf.setShift(TDCZNCS, 14);
+  conf.setShift(TDCZPCC, 14);
+  conf.setShift(TDCZPCS, 14);
 
   conf.print();
 
