@@ -15,15 +15,17 @@ using namespace o2::zdc;
 
 O2ParamImpl(ZDCTDCParam);
 
-void ZDCTDCParam::setShift(uint32_t ich, float val){
-  if(ich>=0 && ich<NTDCChannels){
-    tdc_shift[ich]=val;
-  }else{
+void ZDCTDCParam::setShift(uint32_t ich, float val)
+{
+  if (ich >= 0 && ich < NTDCChannels) {
+    tdc_shift[ich] = val;
+  } else {
     LOG(FATAL) << __func__ << " channel " << ich << " not in allowed range";
   }
 }
 
-void ZDCTDCParam::print(){
+void ZDCTDCParam::print()
+{
   LOG(INFO) << "TDCZNAC shift " << tdc_shift[TDCZNAC] << " ns";
   LOG(INFO) << "TDCZNAS shift " << tdc_shift[TDCZNAS] << " ns";
   LOG(INFO) << "TDCZPAC shift " << tdc_shift[TDCZPAC] << " ns";

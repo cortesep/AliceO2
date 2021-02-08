@@ -8,7 +8,6 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-
 #ifndef O2_ZDC_TDCPARAM_H_
 #define O2_ZDC_TDCPARAM_H_
 
@@ -28,11 +27,11 @@ namespace zdc
 // parameters of ZDC reconstruction
 
 struct ZDCTDCParam : public o2::conf::ConfigurableParamHelper<ZDCTDCParam> {
-  float tdc_shift[NTDCChannels]={0,0,0,0,0,0,0,0,0,0}; // Correction of TDC position (ns)
-  public:
+  float tdc_shift[NTDCChannels] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // Correction of TDC position (ns)
+ public:
   void setShift(uint32_t ich, float val);
   void print();
-  public:
+
   O2ParamDef(ZDCTDCParam, "ZDCTDCParam");
 };
 } // namespace zdc
