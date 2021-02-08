@@ -12,7 +12,7 @@
 
 #include "FairLogger.h"
 #include "CCDB/CcdbApi.h"
-#include "ZDCBase/ModuleConfig.h"
+#include "ZDCRaw/ZDCRecoParam.h"
 #include "ZDCBase/Constants.h"
 #include <string>
 #include <TFile.h>
@@ -23,15 +23,33 @@
 using namespace o2::zdc;
 using namespace std;
 
-void CreateModuleConfig(long tmin = 0, long tmax = -1,
+void CreateRecoConfig(long tmin = 0, long tmax = -1,
                         std::string ccdbHost = "http://ccdb-test.cern.ch:8080")
 {
 
-  ModuleConfig conf;
+  ZDCRecoParam conf;
 
   int modID;
 
   //-------------------------------------------
+  // Generale configuration
+  //-------------------------------------------
+  //-------------------------------------------
+  // Expert configuration
+  //-------------------------------------------
+  // Set bits in TDC coincidence for trigger channels that are not working (off)
+//   conf.setBit(TDCZNAC,true);
+//   conf.setBit(TDCZNAS,true);
+//   conf.setBit(TDCZPAC,true);
+//   conf.setBit(TDCZPAS,true);
+//   conf.setBit(TDCZEM1,true); // Not in coincidence
+//   conf.setBit(TDCZEM2,true); // Not in coincidence
+//   conf.setBit(TDCZNCC,true);
+//   conf.setBit(TDCZNCS,true);
+//   conf.setBit(TDCZPCC,true);
+//   conf.setBit(TDCZPCS,true);
+ 
+  
   // Up to 8 modules with four channels
   // setChannel(int slot, int8_t chID, int16_t fID, bool read, bool trig = false, int tF = 0, int tL = 0, int tS = 0, int tT = 0)
   // tF is the first sample that will enter in the trigger definition for one bunch
@@ -42,6 +60,7 @@ void CreateModuleConfig(long tmin = 0, long tmax = -1,
   // channel id must be in range 0-3
   // frontend id must be in range 0-15 and identify the pair of channels connected to
   // each fibre
+/*
   {
     modID = 0;
     auto& module = conf.modules[modID];
@@ -131,12 +150,12 @@ void CreateModuleConfig(long tmin = 0, long tmax = -1,
   }
   conf.check();
   conf.print();
-
+*/
   o2::ccdb::CcdbApi api;
   map<string, string> metadata; // can be empty
   api.init(ccdbHost.c_str());   // or http://localhost:8080 for a local installation
   // store abitrary user object in strongly typed manner
-  api.storeAsTFileAny(&conf, CCDBPathConfigModule, metadata, tmin, tmax);
+  api.storeAsTFileAny(&conf, CCDBPathConfigReco, metadata, tmin, tmax);
 
   // return conf;
 }
