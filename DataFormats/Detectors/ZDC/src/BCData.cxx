@@ -14,7 +14,7 @@
 
 using namespace o2::zdc;
 
-void BCData::print() const
+void BCData::print(uint32_t triggerMask) const
 {
   printf("Orbit %9u bc %4u nch %2d pos %d\n", ir.orbit, ir.bc, ref.getEntries(), ref.getFirstEntry());
   printf("Read:");
@@ -41,10 +41,20 @@ void BCData::print() const
         printf("] %d[", ic / NChPerModule);
       }
     }
-    if (triggers & (0x1 << ic)) {
-      printf("H");
+    bool is_hit=triggers & (0x1 << ic);
+    bool is_trig=triggerMask & (0x1 << ic);
+    if (is_trig){
+      if (is_hit){
+        printf("T");
+      }else{
+        printf(".");
+      }
     } else {
-      printf(" ");
+      if (is_hit){
+        printf("H");
+      }else{
+        printf(" ");
+      }
     }
   }
   printf("]\n");

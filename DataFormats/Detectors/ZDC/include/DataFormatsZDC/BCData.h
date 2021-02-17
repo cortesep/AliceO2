@@ -47,7 +47,7 @@ struct BCData {
   }
 
   gsl::span<const ChannelData> getBunchChannelData(const gsl::span<const ChannelData> tfdata) const;
-  void print() const;
+  void print(uint32_t triggerMask=0) const;
 
   ClassDefNV(BCData, 1);
 };
