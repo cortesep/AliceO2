@@ -63,6 +63,12 @@ constexpr int ADCMin = -2048, ADCMax = 2047, ADCRange = 4096; // 12 bit ADC
 
 constexpr int MaxTDCValues = 5;  // max number of TDC values to store in reconstructed event
 constexpr int NTDCChannels = 10; // max number of TDC values to store in reconstructed event
+// Parameters of interpolating function
+constexpr int TSL = 6;    // number of zeros on the right (and on the left) of central peak
+constexpr int TSN = 200;  // Number of interpolated points between each pair = TSN-1
+constexpr int TSNS = 96;  // Number of interpolated points per ns
+constexpr int NTS = 2 * TSL * TSN + 1; //Tapered sinc function array size
+
 enum TDCChannelID {
   TDCZNAC,
   TDCZNAS,
@@ -175,6 +181,9 @@ constexpr std::string_view ChannelNames[] = {
 
 const std::string CCDBPathConfigSim = "ZDC/Config/Sim";
 const std::string CCDBPathConfigModule = "ZDC/Config/Module";
+const std::string CCDBPathConfigReco= "ZDC/Calib/RecoParam";
+const std::string CCDBPathConfigIntegration= "ZDC/Calib/IntegrationParam";
+const std::string CCDBPathTDCCalib= "ZDC/Calib/TDCCalib";
 
 constexpr std::string_view DummyName = "Dumm";
 constexpr std::string_view VoidName = " NA ";

@@ -30,6 +30,10 @@ o2_add_test_root_macro(CreateTDCCalib.C
                        PUBLIC_LINK_LIBRARIES O2::ZDCBase O2::ZDCRaw O2::CCDB
                        LABELS zdc)
 
+o2_add_test_root_macro(CreateIntegrationConfig.C
+                       PUBLIC_LINK_LIBRARIES O2::ZDCBase O2::ZDCRaw O2::CCDB
+                       LABELS zdc)
+
 o2_add_test_root_macro(readZDCDigits.C
                        PUBLIC_LINK_LIBRARIES O2::ZDCSimulation O2::CCDB
                        LABELS zdc)
