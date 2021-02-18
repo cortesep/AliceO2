@@ -68,7 +68,7 @@ void CreateIntegrationConfig(long tmin = 0, long tmax = -1,
   map<string, string> metadata; // can be empty
   api.init(ccdbHost.c_str());   // or http://localhost:8080 for a local installation
   // store abitrary user object in strongly typed manner
-  api.storeAsTFileAny(&conf, CCDBPathTDCCalib, metadata, tmin, tmax);
+  api.storeAsTFileAny(&conf, CCDBPathConfigIntegration, metadata, tmin, tmax);
 
   // return conf;
 }
