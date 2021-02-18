@@ -21,6 +21,7 @@
 #include "DataFormatsZDC/RawEventData.h"
 #include "ZDCSimulation/Digits2Raw.h"
 #include "ZDCRaw/RawReconstruction.h"
+#include "ZDCRaw/ZDCTDCParam.h"
 #include <vector>
 #include <sstream>
 
@@ -54,14 +55,32 @@ WorkflowSpec defineDataProcessing(ConfigContext const& config)
 	    LOG(FATAL) << "Cannot get imestamp";
 	  }
 	  mgr.setTimestamp(timeStamp);
+	  // Module mapping
 	  auto moduleConfig = mgr.get<o2::zdc::ModuleConfig>(o2::zdc::CCDBPathConfigModule);
 	  if (!moduleConfig) {
-	    LOG(FATAL) << "Cannot module configuratio for timestamp " << timeStamp;
+	    LOG(FATAL) << "Cannot load ModuleConfig for timestamp " << timeStamp;
 	    return;
 	  }
-	  LOG(INFO) << "Loaded module configuration for timestamp " << timeStamp;
+	  LOG(INFO) << "Loaded ModuleConfig for timestamp " << timeStamp;
+	  // TDC calibration
+	  auto TDCParam = mgr.get<o2::zdc::ZDCTDCParam>(o2::zdc::CCDBPathTDCCalib);
+	  if (!TDCParam) {
+	    LOG(FATAL) << "Cannot load ZDCTDCParam for timestamp " << timeStamp;
+	    return;
+	  }
+	  LOG(INFO) << "Loaded ZDCTDCParam for timestamp " << timeStamp;
+	  // Configuration of integration
+	  auto IntegrationParam = mgr.get<o2::zdc::ZDCIntegrationParam>(o2::zdc::CCDBPathConfigIntegration);
+	  if (!IntegrationParam) {
+	    LOG(FATAL) << "Cannot load ZDCIntegrationParam for timestamp " << timeStamp;
+	    return;
+	  }
+	  LOG(INFO) << "Loaded ZDCIntegrationParam for timestamp " << timeStamp;
+
 	  o2::zdc::RawReconstruction zdc_rr;
 	  zdc_rr.setModuleConfig(moduleConfig);
+ 	  zdc_rr.setTDCParam(TDCParam);
+ 	  zdc_rr.setIntegrationParam(IntegrationParam);
           zdc_rr.init();
           zdc_rr.setVerbosity(loglevel);
           DPLRawParser parser(inputs);
