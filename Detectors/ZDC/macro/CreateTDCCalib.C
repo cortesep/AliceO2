@@ -32,16 +32,18 @@ void CreateTDCCalib(long tmin = 0, long tmax = -1,
   int modID;
 
   // Recentering of TDCs
-  conf.setShift(TDCZNAC, 14);
-  conf.setShift(TDCZNAS, 14);
-  conf.setShift(TDCZPAC, 14);
-  conf.setShift(TDCZPAS, 14);
-  conf.setShift(TDCZEM1, 14);
-  conf.setShift(TDCZEM2, 14);
-  conf.setShift(TDCZNCC, 14);
-  conf.setShift(TDCZNCS, 14);
-  conf.setShift(TDCZPCC, 14);
-  conf.setShift(TDCZPCS, 14);
+  // Value should be in range 0-25 ns
+  // N.B. the internal representation is in units of 1 ns/96
+  conf.setShift(TDCZNAC, 14.);
+  conf.setShift(TDCZNAS, 14.);
+  conf.setShift(TDCZPAC, 14.);
+  conf.setShift(TDCZPAS, 14.);
+  conf.setShift(TDCZEM1, 14.);
+  conf.setShift(TDCZEM2, 14.);
+  conf.setShift(TDCZNCC, 14.);
+  conf.setShift(TDCZNCS, 14.);
+  conf.setShift(TDCZPCC, 14.);
+  conf.setShift(TDCZPCS, 14.);
 
   conf.print();
 
