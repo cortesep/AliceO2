@@ -484,8 +484,8 @@ void Digits2Raw::convertDigits(int ibc)
   assignTriggerBits(ibc, bc, orbit, false);
 
   if (mVerbosity > 0) {
-    mBCD.print();
-    printf("Mask: %s\n", mPrintTriggerMask.data());
+    mBCD.print(mTriggerMask);
+    //printf("Mask: %s\n", mPrintTriggerMask.data());
   }
 
   int chEnt = mBCD.ref.getFirstEntry();

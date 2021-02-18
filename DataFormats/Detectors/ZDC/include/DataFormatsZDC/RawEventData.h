@@ -87,10 +87,12 @@ union EventChData {
 };
 
 struct EventData {
-  EventChData data[NModules][NChPerModule] = {0};
-  Short_t s[NModules][NChPerModule][NTimeBinsPerBC] = {0};
+  EventChData data[NModules][NChPerModule] = {0};          /// Raw data payload
+  Short_t s[NModules][NChPerModule][NTimeBinsPerBC] = {0}; //! Decoded samples
   void print() const;
   void reset();
+  void decode();                     /// Decode event samples into temporary array
+  void decodeCh(Int_t im, Int_t ic); /// Decode event samples into temporary array
   ClassDefNV(EventData, 1);
 };
 

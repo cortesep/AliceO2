@@ -32,7 +32,7 @@ void CreateRecoConfig(long tmin = 0, long tmax = -1,
   int modID;
 
   //-------------------------------------------
-  // Generale configuration
+  // General configuration
   //-------------------------------------------
   //-------------------------------------------
   // Expert configuration

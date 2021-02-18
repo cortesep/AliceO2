@@ -52,6 +52,74 @@ void EventData::print() const
 //______________________________________________________________________________
 void EventData::reset()
 {
+  // Clear GBT words
   static constexpr int payloadSize = NModules * NChPerModule * NWPerGBTW * sizeof(UInt_t);
   memset((void*)&data[0][0], 0, payloadSize);
+  // Clear decoded samples
+  static constexpr int sampleSize = NModules * NChPerModule * NTimeBinsPerBC * sizeof(Short_t);
+  memset((void*)&s[0][0][0], 0, sampleSize);
+}
+
+//______________________________________________________________________________
+void EventData::decode()
+{
+  // Convert raw samples to signed integers
+  UShort_t us[NTimeBinsPerBC];
+  for (Int_t im = 0; im < o2::zdc::NModules; im++) {
+    for (Int_t ic = 0; ic < o2::zdc::NChPerModule; ic++) {
+      if (data[im][ic].f.fixed_0 == Id_w0 && data[im][ic].f.fixed_1 == Id_w1 && data[im][ic].f.fixed_2 == Id_w2) {
+        auto& chd = data[im][ic];
+        us[0] = chd.f.s00;
+        us[1] = chd.f.s01;
+        us[2] = chd.f.s02;
+        us[3] = chd.f.s03;
+        us[4] = chd.f.s04;
+        us[5] = chd.f.s05;
+        us[6] = chd.f.s06;
+        us[7] = chd.f.s07;
+        us[8] = chd.f.s08;
+        us[9] = chd.f.s09;
+        us[10] = chd.f.s10;
+        us[11] = chd.f.s11;
+        for (Int_t i = 0; i < NTimeBinsPerBC; i++) {
+          if (us[i] > ADCMax) {
+            s[im][ic][i] = us[i] - ADCRange;
+          } else {
+            s[im][ic][i] = us[i];
+          }
+        }
+      }
+    }
+  }
+}
+
+//______________________________________________________________________________
+void EventData::decodeCh(Int_t im, Int_t ic)
+{
+  // Convert raw samples to signed integers
+  UShort_t us[NTimeBinsPerBC];
+  if (im >= 0 && im < o2::zdc::NModules && ic >= 0 && ic < o2::zdc::NChPerModule) {
+    if (data[im][ic].f.fixed_0 == Id_w0 && data[im][ic].f.fixed_1 == Id_w1 && data[im][ic].f.fixed_2 == Id_w2) {
+      auto& chd = data[im][ic];
+      us[0] = chd.f.s00;
+      us[1] = chd.f.s01;
+      us[2] = chd.f.s02;
+      us[3] = chd.f.s03;
+      us[4] = chd.f.s04;
+      us[5] = chd.f.s05;
+      us[6] = chd.f.s06;
+      us[7] = chd.f.s07;
+      us[8] = chd.f.s08;
+      us[9] = chd.f.s09;
+      us[10] = chd.f.s10;
+      us[11] = chd.f.s11;
+      for (Int_t i = 0; i < NTimeBinsPerBC; i++) {
+        if (us[i] > ADCMax) {
+          s[im][ic][i] = us[i] - ADCRange;
+        } else {
+          s[im][ic][i] = us[i];
+        }
+      }
+    }
+  }
 }

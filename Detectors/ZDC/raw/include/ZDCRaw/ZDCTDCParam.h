@@ -29,6 +29,7 @@ struct ZDCTDCParam {
   float tdc_shift[NTDCChannels] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // Correction of TDC position (ns)
  public:
   void setShift(uint32_t ich, float val);
+  float getShift(uint32_t ich) const;
   void print();
 
   ClassDefNV(ZDCTDCParam, 1);

@@ -35,3 +35,13 @@ void ZDCTDCParam::print()
   LOG(INFO) << "TDCZPCC shift " << tdc_shift[TDCZPCC] << " ns";
   LOG(INFO) << "TDCZPCS shift " << tdc_shift[TDCZPCS] << " ns";
 }
+
+float ZDCTDCParam::getShift(uint32_t ich) const
+{
+  if (ich >= 0 && ich < NTDCChannels) {
+    return tdc_shift[ich];
+  } else {
+    LOG(FATAL) << __func__ << " channel " << ich << " not in allowed range";
+    return 0;
+  }
+}

@@ -8,6 +8,17 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
+#include "FairLogger.h"
 #include "ZDCRaw/ZDCRecoParam.h"
 
-O2ParamImpl(o2::zdc::ZDCRecoParam);
+using namespace o2::zdc;
+
+O2ParamImpl(ZDCRecoParam);
+
+void ZDCRecoParam::setBit(uint32_t ibit, bool val){
+  if(ibit>=0 && ibit<NTDCChannels){
+    bitset[ibit]=val;
+  }else{
+    LOG(FATAL) << __func__ << " bit " << ibit << " not in allowed range";
+  }
+}
