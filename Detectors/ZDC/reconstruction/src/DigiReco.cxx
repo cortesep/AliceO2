@@ -201,7 +201,24 @@ void DigiReco::init()
         ropt.end_ped_int[ich] = mRecoConfigZDC->end_ped_int[ich];
       }
     }
-    LOG(INFO) << ChannelNames[ich] << " integration: signal=[" << ropt.beg_int[ich] << ":" << ropt.end_int[ich] << "] pedestal=[" << ropt.beg_ped_int[ich] << ":" << ropt.end_ped_int[ich] << "]";
+    // Thresholds for pedestal
+    // If the reconstruction parameters were not manually set
+    if (ropt.beg_int[ich] == ADCRange) {
+      if (!mRecoConfigZDC) {
+        LOG(FATAL) << "Pedestal threshold high for signal " << ich << " missing configuration object and no manual override";
+      } else {
+        ropt.ped_thr_hi[ich] = mRecoConfigZDC->ped_thr_hi[ich];
+      }
+    }
+    if (ropt.beg_int[ich] == ADCRange) {
+      if (!mRecoConfigZDC) {
+        LOG(FATAL) << "Pedestal threshold low for signal " << ich << " missing configuration object and no manual override";
+      } else {
+        ropt.ped_thr_lo[ich] = mRecoConfigZDC->ped_thr_lo[ich];
+      }
+    }
+    LOG(INFO) << ChannelNames[ich] << " integration: signal=[" << ropt.beg_int[ich] << ":" << ropt.end_int[ich] << "] pedestal=[" << ropt.beg_ped_int[ich] << ":" << ropt.end_ped_int[ich]
+              << "] thresholds (" << ropt.ped_thr_hi[ich] << ", " << ropt.ped_thr_lo[ich] << ")";
   }
 } // init
 
