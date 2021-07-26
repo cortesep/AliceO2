@@ -74,6 +74,15 @@ void RecoConfigZDC::setIntegration(uint32_t ich, int beg, int end, int beg_ped, 
   }
 }
 
+void RecoConfigZDC::setPedThreshold(int32_t ich, float high, float low){
+  if (ich >= 0 && ich < NChannels) {
+    ped_thr_hi[ich] = high;
+    ped_thr_lo[ich] = low;
+  } else {
+    LOG(FATAL) << __func__ << " channel " << ich << " not in allowed range";
+  }
+}
+
 void RecoConfigZDC::print()
 {
   for (int itdc = 0; itdc < NTDCChannels; itdc++) {
