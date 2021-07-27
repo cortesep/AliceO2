@@ -445,25 +445,24 @@ int DigiReco::reconstruct(int ibeg, int iend)
 
   // Reconstruct integrated charges and fill output tree
   for (int ich = 0; ich < NChannels; ich++) {
-    uint32_t ref[4] = {ZDCRefInitVal, ZDCRefInitVal, ZDCRefInitVal, ZDCRefInitVal};
+    uint32_t ref[NBCReadOut] = {ZDCRefInitVal, ZDCRefInitVal, ZDCRefInitVal, ZDCRefInitVal};
+    // Flags to investigate pile-up
+    bool hasHit[NBCReadOut] = {0};   // Channel has hit
+    bool hasAuto0[NBCReadOut] = {0}; // Module has Auto_0 trigger bit
+    bool hasAutoM[NBCReadOut] = {0}; // Module has Auto_m trigger bit
     for (int ibun = ibeg; ibun <= iend; ibun++) {
       updateOffsets(ibun); // Get Orbit pedestals
       auto& rec = mReco[ibun];
       // Check if the corresponding TDC is fired
       ref[0] = mReco[ibun].ref[ich];
+      hasHit[0] = mBCData[ibun].triggers & mChMask[ich];
+      ModuleTriggerMapData mt;
+      mt.w = mBCData[ibun].moduleTriggers[ropt.amod[ich]];
+      hasAuto0[0] = mt.f.Auto_0;
+      hasAutoM[0] = mt.f.Auto_m;
       if (rec.chfired[ich]) {
         // Check if channel data are present in payload
         if (ref[0] < ZDCRefInitVal) {
-          // Flags to investigate pile-up
-          ModuleTriggerMapData mt;
-          mt.w = mBCData[ibun].moduleTriggers[ropt.amod[ich]];
-          bool hasPre = false;                                 // There is a previous bunch
-          bool curHit = mBCData[ibun].triggers & mChMask[ich]; // Channel has an hit in current b.c.
-          bool curT = mt.f.Auto_0;                             // Module has Auto_0 trigger bit in current b.c.
-          bool curM = mt.f.Auto_m;                             // Module has Auto_m trigger bit in current b.c.
-          bool preHit = false;                                 // Channel has an hit in previous
-          bool preT = false;                                   // Module has Auto_m trigger bit
-          bool preM = false;                                   // Module has Auto_m trigger bit
           // Energy reconstruction
           // Compute event by event pedestal
           bool hasEvPed = false;
@@ -536,13 +535,16 @@ int DigiReco::reconstruct(int ibeg, int iend)
           rec.err[ich] = true;
         }
       }
-      if(ibun!=iend){
-        ref[3]=ref[2];
-        ref[2]=ref[1];
-        ref[1]=ref[0];
+      if (ibun != iend) {
+        for (int ibcr = NBCReadOut - 1; ibcr > 0; ibcr--) {
+          ref[ibcr] = ref[ibcr - 1];
+          hasHit[ibcr] = hasHit[ibcr - 1];
+          hasAuto0[ibcr] = hasAuto0[ibcr - 1];
+          hasAutoM[ibcr] = hasAutoM[ibcr - 1];
+        }
       }
-    } // Loop on channels
-  }   // Loop on bunches
+    } // Loop on bunches
+  }   // Loop on channels
   if (mTreeDbg) {
     for (int ibun = ibeg; ibun <= iend; ibun++) {
       auto& rec = mReco[ibun];
