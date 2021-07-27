@@ -122,7 +122,8 @@ struct RecEvent {
     }
   }
 
-  void addInfos(const RecEventAux &reca){
+  void addInfos(const RecEventAux& reca)
+  {
     addInfo(reca.tdcPedQC, MsgTDCPedQC);
     addInfo(reca.tdcPedMissing, MsgTDCPedMissing);
     addInfo(reca.adcPedOr, MsgADCPedOr);

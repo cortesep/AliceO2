@@ -97,6 +97,7 @@ class DigiReco
   const ZDCEnergyParam* mEnergyParam = nullptr;                               /// Energy calibration object
   const ZDCTowerParam* mTowerParam = nullptr;                                 /// Tower calibration object
   uint32_t mTDCMask[NTDCChannels] = {0};                                      /// Identify TDC channels in trigger mask
+  uint32_t mChMask[NChannels] = {0};                                          /// Identify channels
   const RecoConfigZDC* mRecoConfigZDC = nullptr;                              /// CCDB configuration parameters
   int32_t mVerbosity = DbgMinimal;
   Double_t mTS[NTS];                                /// Tapered sinc function

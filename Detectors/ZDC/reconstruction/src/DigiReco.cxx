@@ -173,6 +173,8 @@ void DigiReco::init()
           if (mModuleConfig->modules[im].channelID[ic] == ich && mModuleConfig->modules[im].readChannel[ic]) {
             ropt.amod[ich] = im;
             ropt.ach[ich] = ic;
+            // Fill mask to identify TDC channels
+            mChMask[ich] = (0x1 << (4 * im + ic));
             goto next_ich;
           }
         }
@@ -364,11 +366,8 @@ int DigiReco::reconstruct(int ibeg, int iend)
   }
 
   // Loop on bunches after trigger evaluation
-  // Reconstruct integrated charges and fill output tree
-  // TODO: compare average pedestal with estimation from current event
-  // TODO: failover in case of discrepancy
   for (int ibun = ibeg; ibun <= iend; ibun++) {
-    updateOffsets(ibun);
+    updateOffsets(ibun); // Get orbit pedestals
     auto& rec = mReco[ibun];
     for (int itdc = 0; itdc < NTDCChannels; itdc++) {
 #ifdef O2_ZDC_DEBUG
@@ -396,6 +395,7 @@ int DigiReco::reconstruct(int ibeg, int iend)
 #endif
       }
     }
+
 #ifdef O2_ZDC_DEBUG
     printf("%d %u.%-4u TDC PATTERN: ", ibun, mReco[ibun].ir.orbit, mReco[ibun].ir.bc);
     for (int itdc = 0; itdc < NTDCChannels; itdc++) {
@@ -403,31 +403,31 @@ int DigiReco::reconstruct(int ibeg, int iend)
     }
     printf("\n");
 #endif
+
     // Check if coincidence of common PM and sum of towers is satisfied
-    bool fired[NChannels] = {0};
     // Side A
     if ((rec.pattern[TDCZNAC] || ropt.bitset[TDCZNAC]) && (rec.pattern[TDCZNAS] || ropt.bitset[TDCZNAS])) {
       for (int ich = IdZNAC; ich <= IdZNASum; ich++) {
-        fired[ich] = true;
+        rec.chfired[ich] = true;
       }
     }
     if ((rec.pattern[TDCZPAC] || ropt.bitset[TDCZPAC]) && (rec.pattern[TDCZPAS] || ropt.bitset[TDCZPAS])) {
       for (int ich = IdZPAC; ich <= IdZPASum; ich++) {
-        fired[ich] = true;
+        rec.chfired[ich] = true;
       }
     }
     // ZEM1 and ZEM2 are not in coincidence
-    fired[IdZEM1] = rec.pattern[TDCZEM1];
-    fired[IdZEM2] = rec.pattern[TDCZEM2];
+    rec.chfired[IdZEM1] = rec.pattern[TDCZEM1];
+    rec.chfired[IdZEM2] = rec.pattern[TDCZEM2];
     // Side C
     if ((rec.pattern[TDCZNCC] || ropt.bitset[TDCZNCC]) && (rec.pattern[TDCZNCS] || ropt.bitset[TDCZNCS])) {
       for (int ich = IdZNCC; ich <= IdZNCSum; ich++) {
-        fired[ich] = true;
+        rec.chfired[ich] = true;
       }
     }
     if ((rec.pattern[TDCZPCC] || ropt.bitset[TDCZPCC]) && (rec.pattern[TDCZPCS] || ropt.bitset[TDCZPCS])) {
       for (int ich = IdZPCC; ich <= IdZPCSum; ich++) {
-        fired[ich] = true;
+        rec.chfired[ich] = true;
       }
     }
     // TODO: option to use a less restrictive definition of "fired" using for example
@@ -435,27 +435,46 @@ int DigiReco::reconstruct(int ibeg, int iend)
     if (mVerbosity >= DbgFull) {
       printf("%d FIRED ", ibun);
       printf("ZNA:%d%d%d%d%d%d ZPA:%d%d%d%d%d%d ZEM:%d%d ZNC:%d%d%d%d%d%d ZPC:%d%d%d%d%d%d\n",
-             fired[IdZNAC], fired[IdZNA1], fired[IdZNA2], fired[IdZNA3], fired[IdZNA4], fired[IdZNASum],
-             fired[IdZPAC], fired[IdZPA1], fired[IdZPA2], fired[IdZPA3], fired[IdZPA4], fired[IdZPASum],
-             fired[IdZEM1], fired[IdZEM2],
-             fired[IdZNCC], fired[IdZNC1], fired[IdZNC2], fired[IdZNC3], fired[IdZNC4], fired[IdZNCSum],
-             fired[IdZPCC], fired[IdZPC1], fired[IdZPC2], fired[IdZPC3], fired[IdZPC4], fired[IdZPCSum]);
+             rec.chfired[IdZNAC], rec.chfired[IdZNA1], rec.chfired[IdZNA2], rec.chfired[IdZNA3], rec.chfired[IdZNA4], rec.chfired[IdZNASum],
+             rec.chfired[IdZPAC], rec.chfired[IdZPA1], rec.chfired[IdZPA2], rec.chfired[IdZPA3], rec.chfired[IdZPA4], rec.chfired[IdZPASum],
+             rec.chfired[IdZEM1], rec.chfired[IdZEM2],
+             rec.chfired[IdZNCC], rec.chfired[IdZNC1], rec.chfired[IdZNC2], rec.chfired[IdZNC3], rec.chfired[IdZNC4], rec.chfired[IdZNCSum],
+             rec.chfired[IdZPCC], rec.chfired[IdZPC1], rec.chfired[IdZPC2], rec.chfired[IdZPC3], rec.chfired[IdZPC4], rec.chfired[IdZPCSum]);
     }
-    // Get Orbit pedestals
-    updateOffsets(ibun);
+  }
+
+  // Reconstruct integrated charges and fill output tree
+  for (int ibun = ibeg; ibun <= iend; ibun++) {
+    updateOffsets(ibun); // Get Orbit pedestals
+    auto& rec = mReco[ibun];
     for (int ich = 0; ich < NChannels; ich++) {
       // Check if the corresponding TDC is fired
-      if (fired[ich]) {
+      if (rec.chfired[ich]) {
         // Check if channel data are present in payload
         auto ref = mReco[ibun].ref[ich];
         if (ref < ZDCRefInitVal) {
-          // Energy reconstruction Assignment of TDCs
+          // Flags to investigate pile-up
+          ModuleTriggerMapData mt;
+          mt.w = mBCData[ibun].moduleTriggers[ropt.amod[ich]];
+          bool hasPre = false;                                 // There is a previous bunch
+          bool curHit = mBCData[ibun].triggers & mChMask[ich]; // Channel has an hit in current b.c.
+          bool curT = mt.f.Auto_0;                             // Module has Auto_0 trigger bit in current b.c.
+          bool curM = mt.f.Auto_m;                             // Module has Auto_m trigger bit in current b.c.
+          bool preHit = false;                                 // Channel has an hit in previous
+          bool preT = false;                                   // Module has Auto_m trigger bit
+          bool preM = false;                                   // Module has Auto_m trigger bit
+          // Energy reconstruction
           // Compute event by event pedestal
           bool hasEvPed = false;
           float evPed = 0;
           if (ibun > ibeg) {
             auto ref_m = mReco[ibun - 1].ref[ich];
             if (ropt.beg_ped_int[ich] >= 0 || ref < ZDCRefInitVal) {
+              hasPre = true;
+              mt.w = mBCData[ibun - 1].moduleTriggers[ropt.amod[ich]];
+              preHit = mBCData[ibun - 1].triggers & mChMask[ich];
+              bool preT = mt.f.Auto_0;
+              bool preM = mt.f.Auto_m;
               for (int is = ropt.beg_ped_int[ich]; is <= ropt.end_ped_int[ich]; is++) {
                 if (is < 0) {
                   // Sample is in previous BC
@@ -471,22 +490,23 @@ int DigiReco::reconstruct(int ibeg, int iend)
           }
           // Pile-up detection using trigger information allows to identify
           // the presence of a signal in previous bunch and is module-wise
-          // Pile-up detection using pedestal information. Reference can be orbit or QC
+
+          // Detection of pile-up from previous bunch by comparing event pedestal with reference
+          // (reference can be orbit or QC). If pile-up is detected we use orbit pedestal
+          // instead of event pedestal
           // TODO: pedestal event could have a TM..
           if (hasEvPed && (mSource[ich] == PedOr || mSource[ich] == PedQC)) {
             auto pedref = mOffset[ich];
-            if(evPed > pedref && (evPed - pedref) > ropt.ped_thr_hi[ich]){
+            if (evPed > pedref && (evPed - pedref) > ropt.ped_thr_hi[ich]) {
               // Anomalous offset (put a warning but use event pedestal)
               rec.offPed[ich] = true;
-            }else if(evPed < pedref && (pedref - evPed) > ropt.ped_thr_lo[ich]){
+            } else if (evPed < pedref && (pedref - evPed) > ropt.ped_thr_lo[ich]) {
               // Possible presence of pile-up (will need to use orbit pedestal)
               rec.pilePed[ich] = true;
             }
           }
           float myPed = std::numeric_limits<float>::infinity();
-          // TODO: compare event pedestal with orbit pedestal to detect pile-up
-          // from previous bunch. If this is the case we use orbit pedestal
-          // instead of event pedestal
+          // TODO:
           if (hasEvPed && rec.pilePed[ich] == false) {
             myPed = evPed;
             rec.adcPedEv[ich] = true;
