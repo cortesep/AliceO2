@@ -444,15 +444,16 @@ int DigiReco::reconstruct(int ibeg, int iend)
   }
 
   // Reconstruct integrated charges and fill output tree
-  for (int ibun = ibeg; ibun <= iend; ibun++) {
-    updateOffsets(ibun); // Get Orbit pedestals
-    auto& rec = mReco[ibun];
-    for (int ich = 0; ich < NChannels; ich++) {
+  for (int ich = 0; ich < NChannels; ich++) {
+    uint32_t ref[4] = {ZDCRefInitVal, ZDCRefInitVal, ZDCRefInitVal, ZDCRefInitVal};
+    for (int ibun = ibeg; ibun <= iend; ibun++) {
+      updateOffsets(ibun); // Get Orbit pedestals
+      auto& rec = mReco[ibun];
       // Check if the corresponding TDC is fired
+      ref[0] = mReco[ibun].ref[ich];
       if (rec.chfired[ich]) {
         // Check if channel data are present in payload
-        auto ref = mReco[ibun].ref[ich];
-        if (ref < ZDCRefInitVal) {
+        if (ref[0] < ZDCRefInitVal) {
           // Flags to investigate pile-up
           ModuleTriggerMapData mt;
           mt.w = mBCData[ibun].moduleTriggers[ropt.amod[ich]];
@@ -468,8 +469,8 @@ int DigiReco::reconstruct(int ibeg, int iend)
           bool hasEvPed = false;
           float evPed = 0;
           if (ibun > ibeg) {
-            auto ref_m = mReco[ibun - 1].ref[ich];
-            if (ropt.beg_ped_int[ich] >= 0 || ref < ZDCRefInitVal) {
+            auto ref_m = ref[1];
+            if (ropt.beg_ped_int[ich] >= 0 || ref_m < ZDCRefInitVal) {
               hasPre = true;
               mt.w = mBCData[ibun - 1].moduleTriggers[ropt.amod[ich]];
               preHit = mBCData[ibun - 1].triggers & mChMask[ich];
@@ -481,7 +482,7 @@ int DigiReco::reconstruct(int ibeg, int iend)
                   evPed += float(mChData[ref_m].data[is + NTimeBinsPerBC]);
                 } else {
                   // Sample is in current BC
-                  evPed += float(mChData[ref].data[is]);
+                  evPed += float(mChData[ref[0]].data[is]);
                 }
               }
               evPed /= float(ropt.end_ped_int[ich] - ropt.beg_ped_int[ich] + 1);
@@ -524,7 +525,7 @@ int DigiReco::reconstruct(int ibeg, int iend)
             for (int is = ropt.beg_int[ich]; is <= ropt.end_int[ich]; is++) {
               // TODO: pile-up correction
               // TODO: manage signal positioned across boundary
-              sum += (myPed - float(mChData[ref].data[is]));
+              sum += (myPed - float(mChData[ref[0]].data[is]));
             }
             rec.ezdc[ich] = sum * ropt.energy_calib[ich];
           } else {
@@ -534,6 +535,11 @@ int DigiReco::reconstruct(int ibeg, int iend)
           LOG(FATAL) << "Serious mess in reconstruction code";
           rec.err[ich] = true;
         }
+      }
+      if(ibun!=iend){
+        ref[3]=ref[2];
+        ref[2]=ref[1];
+        ref[1]=ref[0];
       }
     } // Loop on channels
   }   // Loop on bunches
