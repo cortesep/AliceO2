@@ -17,6 +17,7 @@
 #include "DataFormatsZDC/BCRecData.h"
 #include "DataFormatsZDC/ZDCEnergy.h"
 #include "DataFormatsZDC/ZDCTDCData.h"
+#include "DataFormatsZDC/RecEventAux.h"
 #include "ZDCBase/Constants.h"
 #include "MathUtils/Cartesian.h"
 #include <Rtypes.h>
@@ -121,6 +122,17 @@ struct RecEvent {
       }
       addInfo(info);
     }
+  }
+
+  void addInfos(const RecEventAux &reca){
+    addInfo(reca.tdcPedQC, MsgTDCPedQC);
+    addInfo(reca.tdcPedMissing, MsgTDCPedMissing);
+    addInfo(reca.adcPedOr, MsgADCPedOr);
+    addInfo(reca.adcPedQC, MsgADCPedQC);
+    addInfo(reca.adcPedMissing, MsgADCPedMissing);
+    addInfo(reca.offPed, MsgOffPed);
+    addInfo(reca.pilePed, MsgPilePed);
+    addInfo(reca.pileTM, MsgPileTM);
   }
 
   void print() const;

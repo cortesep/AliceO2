@@ -166,11 +166,7 @@ void DigitRecoSpec::run(ProcessingContext& pc)
       printf("Orbit %9u bc %4u ntdc %2d ne %2d\n", reca.ir.orbit, reca.ir.bc, nt, ne);
     }
     // Event information
-    recEvent.addInfo(reca.tdcPedQC, MsgTDCPedQC);
-    recEvent.addInfo(reca.tdcPedMissing, MsgTDCPedMissing);
-    recEvent.addInfo(reca.adcPedOr, MsgADCPedOr);
-    recEvent.addInfo(reca.adcPedQC, MsgADCPedQC);
-    recEvent.addInfo(reca.adcPedMissing, MsgADCPedMissing);
+    recEvent.addInfos(reca);
   }
   LOG(INFO) << "Reconstructed " << ntt << " signal TDCs and " << nte << " energies";
   // TODO: rate information for all channels

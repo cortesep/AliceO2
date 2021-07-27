@@ -66,6 +66,9 @@ struct RecEventFlat {
   std::array<bool, NChannels> adcPedOr;       /// Orbit pedestal for ADC
   std::array<bool, NChannels> adcPedQC;       /// QC pedestal for ADC
   std::array<bool, NChannels> adcPedMissing;  /// Missing pedestal for ADC
+  std::array<bool, NChannels> offPed;         /// Anomalous offset from pedestal info
+  std::array<bool, NChannels> pilePed;        /// Pile-up detection from pedestal info
+  std::array<bool, NChannels> pileTM;         /// Pile-up detection from TM trigger bit
   uint8_t mVerbosity = DbgZero;               //! Verbosity level
   uint32_t mTriggerMask = 0;                  //! Trigger mask for printout
 

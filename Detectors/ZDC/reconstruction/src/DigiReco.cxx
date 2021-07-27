@@ -469,11 +469,25 @@ int DigiReco::reconstruct(int ibeg, int iend)
               hasEvPed = true;
             }
           }
+          // Pile-up detection using trigger information allows to identify
+          // the presence of a signal in previous bunch and is module-wise
+          // Pile-up detection using pedestal information
+          // Reference can be orbit or QC
+          if (hasEvPed && (mSource[ich] == PedOr || mSource[ich] == PedQC)) {
+            auto pedref = mOffset[ich];
+            if(evPed > pedref && (evPed - pedref) > ropt.ped_thr_hi[ich]){
+              // Anomalous offset (put a warning but use event pedestal)
+              rec.offPed[ich] = true;
+            }else if(evPed < pedref && (pedref - evPed) > ropt.ped_thr_lo[ich]){
+              // Possible presence of pile-up (will need to use orbit pedestal)
+              rec.pilePed[ich] = true;
+            }
+          }
           float myPed = std::numeric_limits<float>::infinity();
           // TODO: compare event pedestal with orbit pedestal to detect pile-up
           // from previous bunch. If this is the case we use orbit pedestal
           // instead of event pedestal
-          if (hasEvPed) {
+          if (hasEvPed && rec.pilePed[ich] == false) {
             myPed = evPed;
             rec.adcPedEv[ich] = true;
           } else if (mSource[ich] == PedOr) {
