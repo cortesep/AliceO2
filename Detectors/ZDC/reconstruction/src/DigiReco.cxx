@@ -471,8 +471,8 @@ int DigiReco::reconstruct(int ibeg, int iend)
           }
           // Pile-up detection using trigger information allows to identify
           // the presence of a signal in previous bunch and is module-wise
-          // Pile-up detection using pedestal information
-          // Reference can be orbit or QC
+          // Pile-up detection using pedestal information. Reference can be orbit or QC
+          // TODO: pedestal event could have a TM..
           if (hasEvPed && (mSource[ich] == PedOr || mSource[ich] == PedQC)) {
             auto pedref = mOffset[ich];
             if(evPed > pedref && (evPed - pedref) > ropt.ped_thr_hi[ich]){
