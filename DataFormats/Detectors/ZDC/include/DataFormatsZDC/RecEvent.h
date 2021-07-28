@@ -124,6 +124,7 @@ struct RecEvent {
 
   void addInfos(const RecEventAux& reca)
   {
+    // Reconstruction messages
     addInfo(reca.tdcPedQC, MsgTDCPedQC);
     addInfo(reca.tdcPedMissing, MsgTDCPedMissing);
     addInfo(reca.adcPedOr, MsgADCPedOr);
@@ -132,6 +133,7 @@ struct RecEvent {
     addInfo(reca.offPed, MsgOffPed);
     addInfo(reca.pilePed, MsgPilePed);
     addInfo(reca.pileTM, MsgPileTM);
+    addInfo(reca.adcPedMissing, MsgADCMissingwTDC);
   }
 
   void print() const;

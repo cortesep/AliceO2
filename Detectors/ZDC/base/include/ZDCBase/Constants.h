@@ -230,6 +230,7 @@ enum Msg { MsgGeneric = 0,
            MsgOffPed = 6,
            MsgPilePed = 7,
            MsgPileTM = 8,
+           MsgADCMissingwTDC = 9,
            MsgEnd };
 
 constexpr std::string_view MsgText[] = {
@@ -241,7 +242,8 @@ constexpr std::string_view MsgText[] = {
   "ADC missing ped",
   "Positive pedestal offset",
   "Pile-up in event pedestal",
-  "Pile-up in TM"};
+  "Pile-up in TM",
+  "ADC missing, TDC present"};
 
 // List of channels that can be calibrated
 constexpr std::array<int, 10> ChEnergyCalib{IdZNAC, IdZNASum, IdZPAC, IdZPASum,

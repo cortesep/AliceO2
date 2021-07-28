@@ -58,6 +58,8 @@ struct RecEventFlat {
   NElem mNT = 0;                              //! N TDC
   NElem mNI = 0;                              //! N info
   o2::zdc::BCRecData mCurB;                   //! Current BC
+
+  // Reconstruction messages
   std::array<bool, NChannels> tdcPedEv;       /// Event pedestal for TDC
   std::array<bool, NChannels> tdcPedOr;       /// Orbit pedestal for TDC
   std::array<bool, NChannels> tdcPedQC;       /// QC pedestal for TDC
@@ -69,8 +71,10 @@ struct RecEventFlat {
   std::array<bool, NChannels> offPed;         /// Anomalous offset from pedestal info
   std::array<bool, NChannels> pilePed;        /// Pile-up detection from pedestal info
   std::array<bool, NChannels> pileTM;         /// Pile-up detection from TM trigger bit
-  uint8_t mVerbosity = DbgZero;               //! Verbosity level
-  uint32_t mTriggerMask = 0;                  //! Trigger mask for printout
+  std::array<bool, NChannels> adcMissingwTDC; /// Missing ADC even if TDC is present
+
+  uint8_t mVerbosity = DbgZero; //! Verbosity level
+  uint32_t mTriggerMask = 0;    //! Trigger mask for printout
 
   void init(std::vector<o2::zdc::BCRecData>* RecBC, std::vector<o2::zdc::ZDCEnergy>* Energy, std::vector<o2::zdc::ZDCTDCData>* TDCData, std::vector<uint16_t>* Info);
 

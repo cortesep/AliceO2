@@ -450,6 +450,30 @@ int DigiReco::reconstruct(int ibeg, int iend)
     bool hasHit[NBCReadOut] = {0};   // Channel has hit
     bool hasAuto0[NBCReadOut] = {0}; // Module has Auto_0 trigger bit
     bool hasAutoM[NBCReadOut] = {0}; // Module has Auto_m trigger bit
+    // Initialize info about previous bunches
+    for (int ibp = 1; ibp < 4; ibp++) {
+      int ibun = ibeg - ibp;
+      if (ibun < 0){
+        break;
+      }
+      auto bcd = mBCData[ibeg].ir.differenceInBC(mBCData[ibun].ir);
+      if (bcd < 1 || bcd > 3){
+        break;
+      }
+      ref[bcd] = mReco[ibun].ref[ich];
+      // If channel has no waverform data cannot have a hit or trigger bit assigned
+      // because all channels of a module are acquired if trigger condition is
+      // satisfied
+      if(ref[bcd]<0){
+        continue;
+      }
+      hasHit[bcd] = mBCData[ibun].triggers & mChMask[ich];
+      ModuleTriggerMapData mt;
+      mt.w = mBCData[ibun].moduleTriggers[ropt.amod[ich]];
+      hasAuto0[bcd] = mt.f.Auto_0;
+      hasAutoM[bcd] = mt.f.Auto_m;
+      printf("%2d bcd = %d ibun = %d ibeg = %d ref = %d H%d 0%d M%d\n",ich,bcd,ibun,ibeg,ref[bcd],hasHit[bcd],hasAuto0[bcd],hasAutoM[bcd]);
+    }
     for (int ibun = ibeg; ibun <= iend; ibun++) {
       updateOffsets(ibun); // Get Orbit pedestals
       auto& rec = mReco[ibun];
@@ -470,11 +494,6 @@ int DigiReco::reconstruct(int ibeg, int iend)
           if (ibun > ibeg) {
             auto ref_m = ref[1];
             if (ropt.beg_ped_int[ich] >= 0 || ref_m < ZDCRefInitVal) {
-              hasPre = true;
-              mt.w = mBCData[ibun - 1].moduleTriggers[ropt.amod[ich]];
-              preHit = mBCData[ibun - 1].triggers & mChMask[ich];
-              bool preT = mt.f.Auto_0;
-              bool preM = mt.f.Auto_m;
               for (int is = ropt.beg_ped_int[ich]; is <= ropt.end_ped_int[ich]; is++) {
                 if (is < 0) {
                   // Sample is in previous BC
@@ -531,8 +550,17 @@ int DigiReco::reconstruct(int ibeg, int iend)
             LOGF(WARN, "%d.%-4d CH %2d %s missing pedestal", rec.ir.orbit, rec.ir.bc, ich, ChannelNames[ich].data());
           }
         } else {
-          LOG(FATAL) << "Serious mess in reconstruction code";
-          rec.err[ich] = true;
+          // This could arise from memory corruption or in the case when TDC bits are forced to 1
+          // due to a broken channel. For example Sum is broken and sum TDC is forced to 1
+          // Take a very small signal that triggers on one module and not the other
+          // 1) module 0 triggered by ZNATC is autotriggered
+          // 2) module 1 triggered by ZNATC is not triggered -> Sum is missing
+          // 3) sum TDC is forced to 1 and therefore the TDC is fired even if data are not present
+          // 4) you get this error flag in reconstruction
+          // This should happen only in case of hardware fault and signals near threshold
+          // This should be mitigated by having a software threshold higher than the hardware one
+          rec.adcPedMissing[ich] = true;
+          LOGF(WARN, "%d.%-4d CH %2d %s ADC missing, TDC present", rec.ir.orbit, rec.ir.bc, ich, ChannelNames[ich].data());
         }
       }
       if (ibun != iend) {

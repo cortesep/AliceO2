@@ -29,7 +29,7 @@ int RecEventFlat::next()
   if (mEntry >= mNEntries) {
     return 0;
   }
-
+  // Reconstruction messages
   tdcPedEv.fill(false);
   tdcPedOr.fill(false);
   tdcPedQC.fill(false);
@@ -38,6 +38,7 @@ int RecEventFlat::next()
   adcPedOr.fill(false);
   adcPedQC.fill(false);
   adcPedMissing.fill(false);
+  adcMissingwTDC.fill(false);
   ezdc.clear();
   for (int itdc = 0; itdc < NTDCChannels; itdc++) {
     TDCVal[itdc].clear();
@@ -142,6 +143,7 @@ void RecEventFlat::decodeInfo(uint8_t ch, uint16_t code)
     printf("%9u.%04u Info: ch=%2d (%s) code=%-4u (%s)\n", ir.orbit, ir.bc, ch, ch < NChannels ? ChannelNames[ch].data() : "N.D.",
            code, code < MsgEnd ? MsgText[code].data() : "undefined");
   }
+  // Reconstruction messages
   switch (code) {
     case MsgTDCPedQC:
       tdcPedQC[ch] = true;
@@ -166,6 +168,9 @@ void RecEventFlat::decodeInfo(uint8_t ch, uint16_t code)
       break;
     case MsgPileTM:
       pileTM[ch] = true;
+      break;
+    case MsgADCMissingwTDC:
+      adcMissingwTDC[ch] = true;
       break;
     default:
       LOG(ERROR) << "Not managed info code: " << code;
