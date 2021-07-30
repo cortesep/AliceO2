@@ -91,14 +91,16 @@ class DigiReco
   void setPoint(int itdc, int ibeg, int iend, int i); /// Interpolation for current TDC
 #endif
   void assignTDC(int ibun, int ibeg, int iend, int itdc, int tdc, float amp); /// Set reconstructed TDC values
-  bool mIsContinuous = true;                                                  /// continuous (self-triggered) or externally-triggered readout
-  int mNBCAHead = 0;                                                          /// when storing triggered BC, store also mNBCAHead BCs
-  const ZDCTDCParam* mTDCParam = nullptr;                                     /// TDC calibration object
-  const ZDCEnergyParam* mEnergyParam = nullptr;                               /// Energy calibration object
-  const ZDCTowerParam* mTowerParam = nullptr;                                 /// Tower calibration object
-  uint32_t mTDCMask[NTDCChannels] = {0};                                      /// Identify TDC channels in trigger mask
-  uint32_t mChMask[NChannels] = {0};                                          /// Identify channels
-  const RecoConfigZDC* mRecoConfigZDC = nullptr;                              /// CCDB configuration parameters
+  void findSignals(int ibeg, int iend);                                       /// Find signals around main-main that satisfy condition on TDC
+  const RecoParamZDC* mRopt = nullptr;
+  bool mIsContinuous = true;                     /// continuous (self-triggered) or externally-triggered readout
+  int mNBCAHead = 0;                             /// when storing triggered BC, store also mNBCAHead BCs
+  const ZDCTDCParam* mTDCParam = nullptr;        /// TDC calibration object
+  const ZDCEnergyParam* mEnergyParam = nullptr;  /// Energy calibration object
+  const ZDCTowerParam* mTowerParam = nullptr;    /// Tower calibration object
+  uint32_t mTDCMask[NTDCChannels] = {0};         /// Identify TDC channels in trigger mask
+  uint32_t mChMask[NChannels] = {0};             /// Identify channels
+  const RecoConfigZDC* mRecoConfigZDC = nullptr; /// CCDB configuration parameters
   int32_t mVerbosity = DbgMinimal;
   Double_t mTS[NTS];                                /// Tapered sinc function
   bool mTreeDbg = false;                            /// Write reconstructed data in debug output file
