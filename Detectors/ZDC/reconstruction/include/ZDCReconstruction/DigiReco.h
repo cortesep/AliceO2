@@ -86,6 +86,7 @@ class DigiReco
   int reconstruct(int seq_beg, int seq_end);                         /// Main method for data reconstruction
   void processTrigger(int itdc, int ibeg, int iend);                 /// Replay of trigger algorithm on acquired data
   void interpolate(int itdc, int ibeg, int iend);                    /// Interpolation of samples to evaluate signal amplitude and arrival time
+  void correctTDCPile(int ibeg, int iend);                           /// Correction of pile-up in TDC
   O2_ZDC_DIGIRECO_FLT getPoint(int itdc, int ibeg, int iend, int i); /// Interpolation for current TDC
 #ifdef O2_ZDC_INTERP_DEBUG
   void setPoint(int itdc, int ibeg, int iend, int i); /// Interpolation for current TDC

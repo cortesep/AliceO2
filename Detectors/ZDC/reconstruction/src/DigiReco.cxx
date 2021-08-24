@@ -235,6 +235,9 @@ int DigiReco::process(const gsl::span<const o2::zdc::OrbitData>& orbitdata, cons
   // Initialization of lookup structure for pedestals
   mOrbit.clear();
   int norb = mOrbitData.size();
+  if (mVerbosity >= DbgFull) {
+    LOG(INFO) << "Dump of pedestal data lookup table";
+  }
   for (int iorb = 0; iorb < norb; iorb++) {
     mOrbit[mOrbitData[iorb].ir.orbit] = iorb;
     if (mVerbosity >= DbgFull) {
@@ -363,11 +366,12 @@ int DigiReco::reconstruct(int ibeg, int iend)
     }
   }
 
-  // processTrigger(..) calls interpolate(..) that assigns all TDCs 
+  // processTrigger(..) calls interpolate(..) that assigns all TDCs
   // The following processing stage findSignals(..) assumes that time shift
   // due to pile-up has been corrected because main-main is assumed to be
   // in position 0
   // TODO: Perform pile-up correction for TDCs
+  // Pile-up correction for TDCs
 
   // After pile-up correction, find signals around main-main that satisfy condition on TDC
   findSignals(ibeg, iend);
@@ -516,7 +520,8 @@ int DigiReco::reconstruct(int ibeg, int iend)
   return 0;
 } //reconstruct
 
-void DigiReco::findSignals(int ibeg, int iend){
+void DigiReco::findSignals(int ibeg, int iend)
+{
   // Identify TDC signals
   for (int ibun = ibeg; ibun <= iend; ibun++) {
     updateOffsets(ibun); // Get orbit pedestals
@@ -597,17 +602,62 @@ void DigiReco::findSignals(int ibeg, int iend){
   }
 }
 
-// void correctTDCPile(int ibeg, int iend){
-//   // Correct for pile-up in TDCs
-//   for (int itdc = 0; itdc < NTDCChannels; itdc++) {
-//     RecEventAux *rec[NBCReadOut] = {nullptr, nullptr, nullptr, nullptr};
-//     for (int ibun = ibeg; ibun <= iend; ibun++) {
-//       rec[0] = &mReco[ibun];
-//       if(rec[0]->ntdc[itdc]>0){
-//       }
-//     }
-//   }
-// }
+void correctTDCPile(int ibeg, int iend)
+{
+  // Pile-up correction for TDCs
+  // FEE acquires data in two modes: triggered and continuous
+  // In triggered mode minimum two and up to four bunches are transferred for each ALICE trigger
+  // In continuous mode two bunches are transferred for each autotrigger
+  // Reconstruction is performed for consecutive bunches
+  // There is no issue with gaps for triggered mode because the trigger condition
+  // A0 || A1 || (A2 && (T0 || TM)) || (A3 && T0) one can have the following sequences
+  // where: T is autotrigger, A is ALICE trigger, P is a previous bunch, - is skipped
+  // ---PA
+  // ---TA
+  // --TPA
+  // -TPPA
+  // On the other hand, in autotrigger mode one can have a gap
+  // ---PT
+  // --PTT
+  // -PTPT
+  // PT-PT
+  // therefore we have to look for an interaction outside the range requested in the call
+
+  constexpr NBCLook = 4;
+  RecEventAux* rec[NBCLook] = {nullptr, nullptr, nullptr, nullptr};
+  for (int i = 1; i < NBCLook; i++) {
+    if (ibeg >= i) {
+      rec[i] = &mReco[ibeg - i];
+    }
+  }
+  for (int ibun = ibeg; ibun <= iend; ibun++) {
+    rec[0] = &mReco[ibun];
+    for (int itdc = 0; itdc < NTDCChannels; itdc++) {
+      if (rec[0]->ntdc[itdc] > 0) {
+        // Loop on hits on the current bunch
+        // Find closest hit on channel
+        bool isFound = false;
+        int16_t TDCVal = 0;
+        int16_t TDCAmp = 0;
+        int64_t TDCbcd = 0;
+        // Look for a hit in the same bunch crossing
+        // Look for the hit that has the greatest influence
+
+        for (int ib = 1; ib < NBCReadOut; ib++) {
+          if(rec[ib]){
+            auto bcd = (rec[0]->ir).differenceInBC(rec[ib]->ir);
+            if(bcd >= NBCLook){
+              break;
+            }
+          }
+        }
+      }
+    }
+    for (int i = 1; i < NBCLook; i++) {
+      rec[i] = rec[i-1];
+    }
+  }
+}
 
 void DigiReco::updateOffsets(int ibun)
 {
@@ -1057,7 +1107,7 @@ void DigiReco::assignTDC(int ibun, int ibeg, int iend, int itdc, int tdc, float 
   // don't exist in data, in this case we add the events to the first
   // or last bunch in the list
   // This situation can happen for a beam satellite close to the bunch
-  // crossing boundary if the main-main is not centered w.r.t. the 
+  // crossing boundary if the main-main is not centered w.r.t. the
   // 12 samples acquired in each bunch crossing
   if (tdc_cor < tdc_min && ibun >= ibeg) {
     // Assign to preceding bunch
