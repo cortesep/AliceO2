@@ -33,20 +33,31 @@ void DigiReco::init()
   }
 
   // Prepare tapered sinc function
+  // Lost reference of first interpolating function
+  // Found problems in implementation: the interpolated function is not derivable in sampled points
   // tsc/TSN =3.75 (~ 4) and TSL*TSN*sqrt(2)/tsc >> 1 (n. of sigma)
-  const O2_ZDC_DIGIRECO_FLT tsc = 750;
-  int n = TSL * TSN;
+  // const O2_ZDC_DIGIRECO_FLT tsc = 750;
+  // Kaiser function
+  O2_ZDC_DIGIRECO_FLT alpha=2;
+  O2_ZDC_DIGIRECO_FLT beta = TMath::Pi()*alpha;
+  O2_ZDC_DIGIRECO_FLT norm=1./TMath::BesselI0(beta);
+  constexpr int n = TSL * TSN;
   for (int tsi = 0; tsi <= n; tsi++) {
     O2_ZDC_DIGIRECO_FLT arg1 = TMath::Pi() * O2_ZDC_DIGIRECO_FLT(tsi) / O2_ZDC_DIGIRECO_FLT(TSN);
     O2_ZDC_DIGIRECO_FLT fs = 1;
     if (arg1 != 0) {
       fs = TMath::Sin(arg1) / arg1;
     }
-    O2_ZDC_DIGIRECO_FLT arg2 = O2_ZDC_DIGIRECO_FLT(tsi) / tsc;
-    O2_ZDC_DIGIRECO_FLT fg = TMath::Exp(-arg2 * arg2);
+    // First tapering window
+    // O2_ZDC_DIGIRECO_FLT arg2 = O2_ZDC_DIGIRECO_FLT(tsi) / tsc;
+    // O2_ZDC_DIGIRECO_FLT fg = TMath::Exp(-arg2 * arg2);
+    // Kaiser window
+    O2_ZDC_DIGIRECO_FLT arg2 = O2_ZDC_DIGIRECO_FLT(tsi) / O2_ZDC_DIGIRECO_FLT(n);
+    O2_ZDC_DIGIRECO_FLT fg = norm*TMath::BesselI0(beta*TMath::Sqrt(1.-arg2*arg2));
     mTS[n + tsi] = fs * fg;
     mTS[n - tsi] = mTS[n + tsi]; // Function is even
   }
+  LOG(INFO) << "Interpolation numeric precision is " << sizeof(O2_ZDC_DIGIRECO_FLT);
 
   if (mTreeDbg) {
     // Open debug file
@@ -546,11 +557,6 @@ void DigiReco::findSignals(int ibeg, int iend)
         if (std::abs(rec.TDCVal[itdc][i]) < mRopt->tdc_search[itdc]) {
           rec.pattern[itdc] = 1;
         }
-#ifdef O2_ZDC_DEBUG
-        else {
-          LOG(INFO) << rec.TDCVal[itdc][i] << " " << mRopt->tdc_search[itdc];
-        }
-#endif
       }
     }
 
@@ -932,7 +938,7 @@ void DigiReco::interpolate(int itdc, int ibeg, int iend)
 #endif
 
   // Looking for a local maximum in a search zone
-  float amp = std::numeric_limits<float>::infinity(); // Amplitude to be stored
+  O2_ZDC_DIGIRECO_FLT amp = std::numeric_limits<float>::infinity(); // Amplitude to be stored
   int isam_amp = 0;                                   // Sample at maximum amplitude (relative to beginning of group)
   int ip_old = -1, ip_cur = -1, ib_cur = -1;          // Current and old points
   bool is_searchable = false;                         // Flag for point in the search zone for maximum amplitude
@@ -1065,9 +1071,9 @@ void DigiReco::interpolate(int itdc, int ibeg, int iend)
 #ifndef O2_ZDC_INTERP_DEBUG
       // Perform interpolation for the searched point
       //setPoint(itdc, ibeg, iend, isam);
-      float myval = getPoint(itdc, ibeg, iend, isam);
+      O2_ZDC_DIGIRECO_FLT myval = getPoint(itdc, ibeg, iend, isam);
 #else
-      float myval = mReco[ib_cur].inter[itdc][mysam];
+      O2_ZDC_DIGIRECO_FLT myval = mReco[ib_cur].inter[itdc][mysam];
 #endif
       if (myval < amp) {
         amp = myval;

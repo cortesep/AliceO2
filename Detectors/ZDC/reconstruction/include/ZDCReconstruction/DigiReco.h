@@ -34,7 +34,8 @@ namespace o2
 {
 namespace zdc
 {
-using O2_ZDC_DIGIRECO_FLT = float;
+//using O2_ZDC_DIGIRECO_FLT = float;
+using O2_ZDC_DIGIRECO_FLT = double;
 class DigiReco
 {
  public:
@@ -78,8 +79,8 @@ class DigiReco
   void setRecoConfigZDC(const RecoConfigZDC* cfg) { mRecoConfigZDC = cfg; };
   const RecoConfigZDC* getRecoConfigZDC() { return mRecoConfigZDC; };
 
-  const uint32_t* getTDCMask() const{ return mTDCMask; }
-  const uint32_t* getChMask() const{ return mChMask; }
+  const uint32_t* getTDCMask() const { return mTDCMask; }
+  const uint32_t* getChMask() const { return mChMask; }
   const std::vector<o2::zdc::RecEventAux>& getReco() { return mReco; }
 
  private:
@@ -105,7 +106,7 @@ class DigiReco
   uint32_t mChMask[NChannels] = {0};             /// Identify channels
   const RecoConfigZDC* mRecoConfigZDC = nullptr; /// CCDB configuration parameters
   int32_t mVerbosity = DbgMinimal;
-  Double_t mTS[NTS];                                /// Tapered sinc function
+  O2_ZDC_DIGIRECO_FLT mTS[NTS];                     /// Tapered sinc function
   bool mTreeDbg = false;                            /// Write reconstructed data in debug output file
   std::unique_ptr<TFile> mDbg = nullptr;            /// Debug output file
   std::unique_ptr<TTree> mTDbg = nullptr;           /// Debug tree
