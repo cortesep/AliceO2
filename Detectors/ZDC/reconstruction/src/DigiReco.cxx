@@ -602,7 +602,7 @@ void DigiReco::findSignals(int ibeg, int iend)
   }
 }
 
-void correctTDCPile(int ibeg, int iend)
+void DigiReco::correctTDCPile(int ibeg, int iend)
 {
   // Pile-up correction for TDCs
   // FEE acquires data in two modes: triggered and continuous
@@ -623,7 +623,7 @@ void correctTDCPile(int ibeg, int iend)
   // PT-PT
   // therefore we have to look for an interaction outside the range requested in the call
 
-  constexpr NBCLook = 4;
+  constexpr int NBCLook = 4;
   RecEventAux* rec[NBCLook] = {nullptr, nullptr, nullptr, nullptr};
   for (int i = 1; i < NBCLook; i++) {
     if (ibeg >= i) {

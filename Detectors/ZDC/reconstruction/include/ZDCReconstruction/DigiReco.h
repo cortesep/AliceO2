@@ -78,6 +78,8 @@ class DigiReco
   void setRecoConfigZDC(const RecoConfigZDC* cfg) { mRecoConfigZDC = cfg; };
   const RecoConfigZDC* getRecoConfigZDC() { return mRecoConfigZDC; };
 
+  const uint32_t* getTDCMask() const{ return mTDCMask; }
+  const uint32_t* getChMask() const{ return mChMask; }
   const std::vector<o2::zdc::RecEventAux>& getReco() { return mReco; }
 
  private:
