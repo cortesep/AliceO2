@@ -219,8 +219,7 @@ void DigiReco::prepareInterpolation(){
   // tsc/TSN =3.75 (~ 4) and TSL*TSN*sqrt(2)/tsc >> 1 (n. of sigma)
   // const O2_ZDC_DIGIRECO_FLT tsc = 750;
   // Kaiser function
-  O2_ZDC_DIGIRECO_FLT alpha=mAlpha;
-  O2_ZDC_DIGIRECO_FLT beta = TMath::Pi()*alpha;
+  O2_ZDC_DIGIRECO_FLT beta = TMath::Pi()*mAlpha;
   O2_ZDC_DIGIRECO_FLT norm=1./TMath::BesselI0(beta);
   constexpr int n = TSL * TSN;
   for (int tsi = 0; tsi <= n; tsi++) {
