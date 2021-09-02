@@ -82,6 +82,7 @@ class DigiReco
   const uint32_t* getTDCMask() const { return mTDCMask; }
   const uint32_t* getChMask() const { return mChMask; }
   const std::vector<o2::zdc::RecEventAux>& getReco() { return mReco; }
+  O2_ZDC_DIGIRECO_FLT mAlpha = 2;
 
  private:
   const ModuleConfig* mModuleConfig = nullptr;                       /// Trigger/readout configuration object
