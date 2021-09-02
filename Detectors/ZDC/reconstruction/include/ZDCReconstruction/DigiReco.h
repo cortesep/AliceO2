@@ -42,6 +42,7 @@ class DigiReco
   DigiReco() = default;
   ~DigiReco() = default;
   void init();
+  void prepareInterpolation();
   int process(const gsl::span<const o2::zdc::OrbitData>& orbitdata,
               const gsl::span<const o2::zdc::BCData>& bcdata,
               const gsl::span<const o2::zdc::ChannelData>& chdata);
@@ -68,6 +69,9 @@ class DigiReco
     LOG(INFO) << "Detected " << mNLastLonely << " lonely bunches at end of orbit";
   }
 
+  void setAlpha(double v) { mAlpha = v; };
+  double getModuleConfig() { return mAlpha; };
+
   void setModuleConfig(const ModuleConfig* moduleConfig) { mModuleConfig = moduleConfig; };
   const ModuleConfig* getModuleConfig() { return mModuleConfig; };
   void setTDCParam(const ZDCTDCParam* param) { mTDCParam = param; };
@@ -82,7 +86,6 @@ class DigiReco
   const uint32_t* getTDCMask() const { return mTDCMask; }
   const uint32_t* getChMask() const { return mChMask; }
   const std::vector<o2::zdc::RecEventAux>& getReco() { return mReco; }
-  O2_ZDC_DIGIRECO_FLT mAlpha = 2;
 
  private:
   const ModuleConfig* mModuleConfig = nullptr;                       /// Trigger/readout configuration object
@@ -126,6 +129,7 @@ class DigiReco
   int mNLastLonely = 0;
   int16_t tdc_shift[NTDCChannels] = {0}; /// TDC correction (units of 1/96 ns)
   constexpr static uint16_t mMask[NTimeBinsPerBC] = {0x0001, 0x002, 0x004, 0x008, 0x0010, 0x0020, 0x0040, 0x0080, 0x0100, 0x0200, 0x0400, 0x0800};
+  O2_ZDC_DIGIRECO_FLT mAlpha = 3; // Parameter of interpolation function
   // Configuration of interpolation for current TDC
   int mNbun;  // Number of adjacent bunches
   int mNsam;  // Number of acquired samples

@@ -32,32 +32,8 @@ void DigiReco::init()
     return;
   }
 
-  // Prepare tapered sinc function
-  // Lost reference of first interpolating function
-  // Found problems in implementation: the interpolated function is not derivable in sampled points
-  // tsc/TSN =3.75 (~ 4) and TSL*TSN*sqrt(2)/tsc >> 1 (n. of sigma)
-  // const O2_ZDC_DIGIRECO_FLT tsc = 750;
-  // Kaiser function
-  O2_ZDC_DIGIRECO_FLT alpha=mAlpha;
-  O2_ZDC_DIGIRECO_FLT beta = TMath::Pi()*alpha;
-  O2_ZDC_DIGIRECO_FLT norm=1./TMath::BesselI0(beta);
-  constexpr int n = TSL * TSN;
-  for (int tsi = 0; tsi <= n; tsi++) {
-    O2_ZDC_DIGIRECO_FLT arg1 = TMath::Pi() * O2_ZDC_DIGIRECO_FLT(tsi) / O2_ZDC_DIGIRECO_FLT(TSN);
-    O2_ZDC_DIGIRECO_FLT fs = 1;
-    if (arg1 != 0) {
-      fs = TMath::Sin(arg1) / arg1;
-    }
-    // First tapering window
-    // O2_ZDC_DIGIRECO_FLT arg2 = O2_ZDC_DIGIRECO_FLT(tsi) / tsc;
-    // O2_ZDC_DIGIRECO_FLT fg = TMath::Exp(-arg2 * arg2);
-    // Kaiser window
-    O2_ZDC_DIGIRECO_FLT arg2 = O2_ZDC_DIGIRECO_FLT(tsi) / O2_ZDC_DIGIRECO_FLT(n);
-    O2_ZDC_DIGIRECO_FLT fg = norm*TMath::BesselI0(beta*TMath::Sqrt(1.-arg2*arg2));
-    mTS[n + tsi] = fs * fg;
-    mTS[n - tsi] = mTS[n + tsi]; // Function is even
-  }
-  LOG(INFO) << "Interpolation numeric precision is " << sizeof(O2_ZDC_DIGIRECO_FLT);
+
+  prepareInterpolation();
 
   if (mTreeDbg) {
     // Open debug file
@@ -235,6 +211,35 @@ void DigiReco::init()
               << "] thresholds (" << ropt.ped_thr_hi[ich] << ", " << ropt.ped_thr_lo[ich] << ")";
   }
 } // init
+
+void DigiReco::prepareInterpolation(){
+  // Prepare tapered sinc function
+  // Lost reference of first interpolating function
+  // Found problems in implementation: the interpolated function is not derivable in sampled points
+  // tsc/TSN =3.75 (~ 4) and TSL*TSN*sqrt(2)/tsc >> 1 (n. of sigma)
+  // const O2_ZDC_DIGIRECO_FLT tsc = 750;
+  // Kaiser function
+  O2_ZDC_DIGIRECO_FLT alpha=mAlpha;
+  O2_ZDC_DIGIRECO_FLT beta = TMath::Pi()*alpha;
+  O2_ZDC_DIGIRECO_FLT norm=1./TMath::BesselI0(beta);
+  constexpr int n = TSL * TSN;
+  for (int tsi = 0; tsi <= n; tsi++) {
+    O2_ZDC_DIGIRECO_FLT arg1 = TMath::Pi() * O2_ZDC_DIGIRECO_FLT(tsi) / O2_ZDC_DIGIRECO_FLT(TSN);
+    O2_ZDC_DIGIRECO_FLT fs = 1;
+    if (arg1 != 0) {
+      fs = TMath::Sin(arg1) / arg1;
+    }
+    // First tapering window
+    // O2_ZDC_DIGIRECO_FLT arg2 = O2_ZDC_DIGIRECO_FLT(tsi) / tsc;
+    // O2_ZDC_DIGIRECO_FLT fg = TMath::Exp(-arg2 * arg2);
+    // Kaiser window
+    O2_ZDC_DIGIRECO_FLT arg2 = O2_ZDC_DIGIRECO_FLT(tsi) / O2_ZDC_DIGIRECO_FLT(n);
+    O2_ZDC_DIGIRECO_FLT fg = norm*TMath::BesselI0(beta*TMath::Sqrt(1.-arg2*arg2));
+    mTS[n + tsi] = fs * fg;
+    mTS[n - tsi] = mTS[n + tsi]; // Function is even
+  }
+  LOG(INFO) << "Interpolation numeric precision is " << sizeof(O2_ZDC_DIGIRECO_FLT);
+}
 
 int DigiReco::process(const gsl::span<const o2::zdc::OrbitData>& orbitdata, const gsl::span<const o2::zdc::BCData>& bcdata, const gsl::span<const o2::zdc::ChannelData>& chdata)
 {
