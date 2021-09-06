@@ -39,6 +39,7 @@ struct RecEventAux : public RecEventFlat {
   int ntdc[NTDCChannels] = {0};           /// Number of hits in TDC
   std::array<bool, NTDCChannels> pattern; /// Pattern of TDC
   uint16_t fired[NTDCChannels] = {0};     /// Position at which the trigger algorithm is fired
+  bool chfired[NChannels] = {0};          /// Fired TDC condition related to channel
   uint32_t ref[NChannels];                /// Cache of references
   std::array<bool, NChannels> err;        /// Generic error condition
 #ifdef O2_ZDC_INTERP_DEBUG

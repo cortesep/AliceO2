@@ -41,6 +41,7 @@ class DigiReco
   DigiReco() = default;
   ~DigiReco() = default;
   void init();
+  void prepareInterpolation();
   int process(const gsl::span<const o2::zdc::OrbitData>& orbitdata,
               const gsl::span<const o2::zdc::BCData>& bcdata,
               const gsl::span<const o2::zdc::ChannelData>& chdata);
@@ -67,6 +68,9 @@ class DigiReco
     LOG(INFO) << "Detected " << mNLastLonely << " lonely bunches at end of orbit";
   }
 
+  void setAlpha(double v) { mAlpha = v; };
+  double getModuleConfig() { return mAlpha; };
+
   void setModuleConfig(const ModuleConfig* moduleConfig) { mModuleConfig = moduleConfig; };
   const ModuleConfig* getModuleConfig() { return mModuleConfig; };
   void setTDCParam(const ZDCTDCParam* param) { mTDCParam = param; };
@@ -78,6 +82,8 @@ class DigiReco
   void setRecoConfigZDC(const RecoConfigZDC* cfg) { mRecoConfigZDC = cfg; };
   const RecoConfigZDC* getRecoConfigZDC() { return mRecoConfigZDC; };
 
+  const uint32_t* getTDCMask() const { return mTDCMask; }
+  const uint32_t* getChMask() const { return mChMask; }
   const std::vector<o2::zdc::RecEventAux>& getReco() { return mReco; }
 
  private:
@@ -86,20 +92,24 @@ class DigiReco
   int reconstruct(int seq_beg, int seq_end);                         /// Main method for data reconstruction
   void processTrigger(int itdc, int ibeg, int iend);                 /// Replay of trigger algorithm on acquired data
   void interpolate(int itdc, int ibeg, int iend);                    /// Interpolation of samples to evaluate signal amplitude and arrival time
+  void correctTDCPile(int ibeg, int iend);                           /// Correction of pile-up in TDC
   O2_ZDC_DIGIRECO_FLT getPoint(int itdc, int ibeg, int iend, int i); /// Interpolation for current TDC
 #ifdef O2_ZDC_INTERP_DEBUG
   void setPoint(int itdc, int ibeg, int iend, int i); /// Interpolation for current TDC
 #endif
   void assignTDC(int ibun, int ibeg, int iend, int itdc, int tdc, float amp); /// Set reconstructed TDC values
-  bool mIsContinuous = true;                                                  /// continuous (self-triggered) or externally-triggered readout
-  int mNBCAHead = 0;                                                          /// when storing triggered BC, store also mNBCAHead BCs
-  const ZDCTDCParam* mTDCParam = nullptr;                                     /// TDC calibration object
-  const ZDCEnergyParam* mEnergyParam = nullptr;                               /// Energy calibration object
-  const ZDCTowerParam* mTowerParam = nullptr;                                 /// Tower calibration object
-  uint32_t mTDCMask[NTDCChannels] = {0};                                      /// Identify TDC channels in trigger mask
-  const RecoConfigZDC* mRecoConfigZDC = nullptr;                              /// CCDB configuration parameters
+  void findSignals(int ibeg, int iend);                                       /// Find signals around main-main that satisfy condition on TDC
+  const RecoParamZDC* mRopt = nullptr;
+  bool mIsContinuous = true;                     /// continuous (self-triggered) or externally-triggered readout
+  int mNBCAHead = 0;                             /// when storing triggered BC, store also mNBCAHead BCs
+  const ZDCTDCParam* mTDCParam = nullptr;        /// TDC calibration object
+  const ZDCEnergyParam* mEnergyParam = nullptr;  /// Energy calibration object
+  const ZDCTowerParam* mTowerParam = nullptr;    /// Tower calibration object
+  uint32_t mTDCMask[NTDCChannels] = {0};         /// Identify TDC channels in trigger mask
+  uint32_t mChMask[NChannels] = {0};             /// Identify channels
+  const RecoConfigZDC* mRecoConfigZDC = nullptr; /// CCDB configuration parameters
   int32_t mVerbosity = DbgMinimal;
-  Double_t mTS[NTS];                                /// Tapered sinc function
+  O2_ZDC_DIGIRECO_FLT mTS[NTS];                     /// Tapered sinc function
   bool mTreeDbg = false;                            /// Write reconstructed data in debug output file
   std::unique_ptr<TFile> mDbg = nullptr;            /// Debug output file
   std::unique_ptr<TTree> mTDbg = nullptr;           /// Debug tree
@@ -110,7 +120,7 @@ class DigiReco
   std::map<uint32_t, int> mOrbit;                   /// Information about orbit
   float mOffset[NChannels];                         /// Offset in current orbit
   uint32_t mOffsetOrbit = 0xffffffff;               /// Current orbit
-  uint32_t mSource[NChannels];                      /// Source of pedestal
+  uint8_t mSource[NChannels];                       /// Source of pedestal
   static constexpr int mNSB = TSN * NTimeBinsPerBC; /// Total number of interpolated points per bunch crossing
   RecEventAux mRec;                                 /// Debug reconstruction event
   int mNBC = 0;
@@ -118,6 +128,7 @@ class DigiReco
   int mNLastLonely = 0;
   int16_t tdc_shift[NTDCChannels] = {0}; /// TDC correction (units of 1/96 ns)
   constexpr static uint16_t mMask[NTimeBinsPerBC] = {0x0001, 0x002, 0x004, 0x008, 0x0010, 0x0020, 0x0040, 0x0080, 0x0100, 0x0200, 0x0400, 0x0800};
+  O2_ZDC_DIGIRECO_FLT mAlpha = 3; // Parameter of interpolation function
   // Configuration of interpolation for current TDC
   int mNbun;  // Number of adjacent bunches
   int mNsam;  // Number of acquired samples

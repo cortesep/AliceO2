@@ -17,6 +17,7 @@
 #include "DataFormatsZDC/BCRecData.h"
 #include "DataFormatsZDC/ZDCEnergy.h"
 #include "DataFormatsZDC/ZDCTDCData.h"
+#include "DataFormatsZDC/RecEventAux.h"
 #include "ZDCBase/Constants.h"
 #include "MathUtils/Cartesian.h"
 #include <Rtypes.h>
@@ -90,7 +91,7 @@ struct RecEvent {
     int cnt = 0;
     std::array<int, NChannels> active;
     for (uint8_t ich = 0; ich < NChannels; ich++) {
-      if (vec[ich] == true) {
+      if (vec[ich]) {
         active[cnt] = ich;
         cnt++;
       }
@@ -98,17 +99,17 @@ struct RecEvent {
     if (cnt == 0) {
       return;
     }
-#ifdef O2_ZDC_DEBUG
-    printf("addInfo(");
-    for (uint8_t ich = 0; ich < NChannels; ich++) {
-      if (vec[ich] == true) {
-        printf("1");
-      } else {
-        printf("0");
-      }
-    }
-    printf(", code=%u \"%s\") %d active.\n", code, MsgText[code].data(), cnt);
-#endif
+//#ifdef O2_ZDC_DEBUG
+//    printf("addInfo(");
+//    for (uint8_t ich = 0; ich < NChannels; ich++) {
+//      if (vec[ich] == true) {
+//        printf("1");
+//      } else {
+//        printf("0");
+//      }
+//    }
+//    printf(", code=%u \"%s\") %d active.\n", code, MsgText[code].data(), cnt);
+//#endif
     if (cnt <= 3) {
       // Transmission of single channels
       for (uint8_t i = 0; i < cnt; i++) {
@@ -130,6 +131,20 @@ struct RecEvent {
       }
       addInfo(info);
     }
+  }
+
+  void addInfos(const RecEventAux& reca)
+  {
+    // Reconstruction messages
+    addInfo(reca.tdcPedQC, MsgTDCPedQC);
+    addInfo(reca.tdcPedMissing, MsgTDCPedMissing);
+    addInfo(reca.adcPedOr, MsgADCPedOr);
+    addInfo(reca.adcPedQC, MsgADCPedQC);
+    addInfo(reca.adcPedMissing, MsgADCPedMissing);
+    addInfo(reca.offPed, MsgOffPed);
+    addInfo(reca.pilePed, MsgPilePed);
+    addInfo(reca.pileTM, MsgPileTM);
+    addInfo(reca.adcPedMissing, MsgADCMissingwTDC);
   }
 
   void print() const;
