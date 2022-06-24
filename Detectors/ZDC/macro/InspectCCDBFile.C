@@ -34,7 +34,7 @@ void InspectCCDBFile()
   }
   TIter nextkey(gDirectory->GetListOfKeys());
   TKey* key;
-  while ((key = (TKey *)nextkey())) {
+  while ((key = (TKey*)nextkey())) {
     // clang-format off
     TString cn = key->GetClassName();
     if (cn.EqualTo("vector<Long64_t>")) {
