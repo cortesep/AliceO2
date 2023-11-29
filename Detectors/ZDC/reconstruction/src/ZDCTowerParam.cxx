@@ -33,9 +33,6 @@ void ZDCTowerParam::setTowerCalib(uint32_t ich, float val, bool ismodified)
     modified[ich] = ismodified;
   } else {
     LOG(fatal) << __func__ << " channel " << ich << " not in allowed range";
-    for (int il = 0; il < ChTowerCalib.size(); il++) {
-      LOG(info) << __func__ << " channel " << ChTowerCalib[il] << " " << ChannelNames[ChTowerCalib[il]];
-    }
   }
 }
 
