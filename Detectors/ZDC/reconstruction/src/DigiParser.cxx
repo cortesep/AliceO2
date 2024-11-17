@@ -77,7 +77,7 @@ void DigiParser::init()
     mFired = std::make_unique<TH1F>("hfired", "Fired channels", NChannels, -0.5, NChannels - 0.5);
   }
   if (mAlignment == nullptr) {
-    mAlignment = std::make_unique<TH2F>("hmap", "Map of fired channels", o2::constants::lhc::LHCMaxBunches, -0.5, o2::constants::lhc::LHCMaxBunches-0.5, NChannels, -0.5, NChannels - 0.5);
+    mAlignment = std::make_unique<TH2F>("hmap", "Map of fired channels", o2::constants::lhc::LHCMaxBunches, -0.5, o2::constants::lhc::LHCMaxBunches - 0.5, NChannels, -0.5, NChannels - 0.5);
   }
   for (uint32_t ich = 0; ich < NChannels; ich++) {
     if (mBaseline[ich] == nullptr) {
